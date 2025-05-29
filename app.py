@@ -163,50 +163,50 @@ if st.button("🚀 开始分析"):
         }
         response = requests.post(DEEPSEEK_API_URL, headers=headers, json=payload)
       if response.status_code == 200:
-         content = response.json()["choices"][0]["message"]["content"]
-         st.success("✅ 分析完成！")
-         st.markdown(content)
+          content = response.json()["choices"][0]["message"]["content"]
+          st.success("✅ 分析完成！")
+          st.markdown(content)
 
-         # --- 导出功能 ---
-         from io import BytesIO
-         from docx import Document
+          # --- 导出功能 ---
+          from io import BytesIO
+          from docx import Document
     
-         def convert_to_docx(text):
-             doc = Document()
-             for para in text.split("\n"):
-                 doc.add_paragraph(para)
-             buffer = BytesIO()
-             doc.save(buffer)
-             buffer.seek(0)
-             return buffer
+          def convert_to_docx(text):
+              doc = Document()
+              for para in text.split("\n"):
+                  doc.add_paragraph(para)
+              buffer = BytesIO()
+              doc.save(buffer)
+              buffer.seek(0)
+              return buffer
     
-         def convert_to_txt(text):
-             return BytesIO(text.encode("utf-8"))
+          def convert_to_txt(text):
+              return BytesIO(text.encode("utf-8"))
     
-         st.markdown("### 📥 导出分析结果")
-         col1, col2 = st.columns(2)
+          st.markdown("### 📥 导出分析结果")
+          col1, col2 = st.columns(2)
     
-         with col1:
-             docx_file = convert_to_docx(content)
-             st.download_button(
-                 label="📄 下载 Word 文件",
-                 data=docx_file,
-                 file_name="访谈分析结果.docx",
-                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          with col1:
+              docx_file = convert_to_docx(content)
+              st.download_button(
+                  label="📄 下载 Word 文件",
+                  data=docx_file,
+                  file_name="访谈分析结果.docx",
+                  mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             )
     
          with col2:
-             txt_file = convert_to_txt(content)
-             st.download_button(
-                 label="📄 下载 TXT 文件",
-                 data=txt_file,
-                 file_name="访谈分析结果.txt",
-                 mime="text/plain"
+              txt_file = convert_to_txt(content)
+              st.download_button(
+                  label="📄 下载 TXT 文件",
+                  data=txt_file,
+                  file_name="访谈分析结果.txt",
+                  mime="text/plain"
             )
     
-      else:
-          st.error("❌ 分析失败，请检查API配置或稍后重试。")
+       else:
+           st.error("❌ 分析失败，请检查API配置或稍后重试。")
     
-      st.markdown("---")
-      st.markdown("💡 提示：如需导出结果，可使用上方按钮下载 Word 或 TXT 文件。")
+       st.markdown("---")
+       st.markdown("💡 提示：如需导出结果，可使用上方按钮下载 Word 或 TXT 文件。")
     
