@@ -31,8 +31,8 @@ DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions"
 
 # --- 文件上传区 ---
 st.markdown("### 1️⃣ 上传访谈大纲与访谈原始内容（支持 PDF、Word、TXT）")
-outline_file = st.file_uploader("上传访谈大纲文件", type=["pdf", "docx", "txt"])
-content_file = st.file_uploader("上传访谈原始内容文件", type=["pdf", "docx", "txt"])
+outline_file = st.file_uploader("上传访谈大纲文件", type=["pdf", "docx", "txt"], key="outline")
+content_file = st.file_uploader("上传访谈原始内容文件", type=["pdf", "docx", "txt"], key="content")
 
 from io import StringIO
 from PyPDF2 import PdfReader
@@ -41,23 +41,37 @@ import docx
 def extract_text_from_file(uploaded_file):
     if uploaded_file is None:
         return ""
-    if uploaded_file.type == "application/pdf":
-        pdf = PdfReader(uploaded_file)
-        return "\n".join(page.extract_text() for page in pdf.pages if page.extract_text())
-    elif uploaded_file.type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-        doc = docx.Document(uploaded_file)
-        return "\n".join([para.text for para in doc.paragraphs])
-    elif uploaded_file.type == "text/plain":
-        stringio = StringIO(uploaded_file.getvalue().decode("utf-8"))
-        return stringio.read()
+    try:
+        if uploaded_file.type == "application/pdf":
+            pdf = PdfReader(uploaded_file)
+            return "\n".join(page.extract_text() for page in pdf.pages if page.extract_text())
+        elif uploaded_file.type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+            doc = docx.Document(uploaded_file)
+            return "\n".join([para.text for para in doc.paragraphs])
+        elif uploaded_file.type == "text/plain":
+            stringio = StringIO(uploaded_file.getvalue().decode("utf-8"))
+            return stringio.read()
+    except Exception as e:
+        st.error(f"❌ 读取文件失败：{str(e)}")
+        return ""
     return ""
 
 outline_input = extract_text_from_file(outline_file)
 interview_text = extract_text_from_file(content_file)
 
-# 调试输出，确认上传内容读取情况
-st.write("### ✅ 已读取访谈大纲内容预览：")
-st.text(outline_input[:1000])  # 只显示前1000字
+# --- 测试文件读取是否成功 ---
+st.markdown("### 🧪 文件读取测试")
+if outline_file:
+    st.success("✅ 已上传大纲文件")
+    st.write("📄 大纲内容预览：", outline_input[:300])
+else:
+    st.warning("⚠️ 未检测到大纲文件")
+
+if content_file:
+    st.success("✅ 已上传访谈原始内容文件")
+    st.write("📄 访谈内容预览：", interview_text[:300])
+else:
+    st.warning("⚠️ 未检测到访谈原始内容文件")
 
 if st.button("🚀 开始分析"):
     if not outline_input.strip() or not interview_text.strip():
@@ -73,7 +87,6 @@ if st.button("🚀 开始分析"):
 
 【任务一｜逐条对照访谈大纲】
 请根据下方访谈大纲，逐一检查受访者是否进行了明确回应：
-- 每条大纲都要列出回应情况。
 - 若有回应，请详细提取相关内容，保留受访者典型表述、关键细节、实际数据。
 - 若为“部分覆盖”或“未覆盖”，请提出**精准、延展性强的补问建议**，可用于后续追问或复采。
 
@@ -92,7 +105,7 @@ if st.button("🚀 开始分析"):
 - 体现受访者的独特经验与判断，具有迁移价值；
 - 展现明显变化轨迹或转折点，有情节性。
 
-请按以下结构输出完整 Markdown 表格，每个故事独立编号，如内容缺失可留空并补充建议：
+请按以下结构输出一个完整的 Markdown 故事表格，每个故事独立编号，如内容缺失可留空并补充建议：
 
 ### 故事编号：S01（示例）
 | 要素 | 内容 |
@@ -108,18 +121,7 @@ if st.button("🚀 开始分析"):
 | 启发意义 |  |
 | 建议补问 | 用于补足空缺要素 |
 
-请确保输出所有符合条件的故事，每个独立编号（如 S01、S02、S03），并依照**时间顺序**排列。
-
-最后，用 mermaid 格式输出故事时间轴：
-```mermaid
-gantt
-title 故事发展时间轴
-%% 每个故事节点
-section 案例发展
-S01 :done, 2022-01, 2w
-S02 :done, 2022-02, 3w
-...
-```
+如有多个故事，请继续使用 S02、S03 编号，并建议以时间线顺序组织，便于形成案例发展图谱。时间轴以mermaid格式输出。
 
 ---
 
